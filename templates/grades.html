@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}ثبت نمرات{% endblock %}
+{% block content %}
+<section class="hero"><h1>ثبت نمرات {{ assignment.subject.name }}</h1><p>{{ assignment.school_class.grade_level.name }} / کلاس {{ assignment.school_class.name }} — معلم: {{ assignment.teacher.full_name if assignment.teacher else 'تعیین نشده' }}</p></section>
+<div class="grid">
+  <div class="card">
+    <div class="section-title"><h2>وضعیت ثبت</h2><div><span class="badge {{ 'badge-lock' if 'formative' in locks else 'badge-ok' }}">تکوینی: {{ 'قفل' if 'formative' in locks else 'باز' }}</span> <span class="badge {{ 'badge-lock' if 'final' in locks else 'badge-ok' }}">پایانی: {{ 'قفل' if 'final' in locks else 'باز' }}</span></div></div>
+    <p class="muted">نمره درس به‌صورت خودکار از فرمول (تکوینی + پایانی) ÷ ۲ محاسبه می‌شود.</p>
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="table-wrap"><table><thead><tr><th>دانش‌آموز</th><th>تکوینی</th><th>پایانی</th><th>نمره درس</th></tr></thead><tbody>
+      {% for e in enrollments %}{% set g=grade_map.get(e.student_id) %}<tr>
+        <td>{{ e.student.full_name }}</td>
+        <td><input class="score-input ltr" type="number" min="0" max="20" step="0.01" name="formative_{{ e.student_id }}" value="{{ g.formative if g and g.formative is not none else '' }}" {% if 'formative' in locks %}disabled{% endif %}></td>
+        <td><input class="score-input ltr" type="number" min="0" max="20" step="0.01" name="final_{{ e.student_id }}" value="{{ g.final if g and g.final is not none else '' }}" {% if 'final' in locks %}disabled{% endif %}></td>
+        <td><b>{{ g.lesson_score if g and g.lesson_score is not none else '—' }}</b></td>
+      </tr>{% else %}<tr><td colspan="4" class="empty">دانش‌آموزی در این کلاس ثبت نشده است.</td></tr>{% endfor %}
+      </tbody></table></div>
+      <div class="actions" style="margin-top:16px">
+        <button class="btn btn-primary" type="submit" name="action" value="save">ثبت نمرات (موقت)</button>
+        {% if current_user.role == 'teacher' %}
+          <button class="btn btn-warning" type="submit" name="action" value="finalize_formative" {% if 'formative' in locks %}disabled{% endif %}>ثبت نهایی تکوینی</button>
+          <button class="btn btn-warning" type="submit" name="action" value="finalize_final" {% if 'final' in locks %}disabled{% endif %}>ثبت نهایی پایانی</button>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+  {% if current_user.role == 'admin' %}
+  <div class="card"><h2>کنترل قفل توسط مدیر</h2>
+    <form method="post" class="form-grid"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="lock"><div><label>بخش برای قفل</label><select name="component"><option value="formative">تکوینی</option><option value="final">پایانی</option><option value="both">هر دو</option></select></div><div style="align-self:end"><button class="btn btn-danger" type="submit">قفل نمرات</button></div></form>
+    <hr style="border:0;border-top:1px solid var(--border);margin:18px 0">
+    <div class="actions">
+      {% if 'formative' in locks %}<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="unlock"><input type="hidden" name="component" value="formative"><button class="btn btn-primary" type="submit">بازگشایی تکوینی</button></form>{% endif %}
+      {% if 'final' in locks %}<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="unlock"><input type="hidden" name="component" value="final"><button class="btn btn-primary" type="submit">بازگشایی پایانی</button></form>{% endif %}
+      {% if not locks %}<span class="muted">هیچ بخشی قفل نیست.</span>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
