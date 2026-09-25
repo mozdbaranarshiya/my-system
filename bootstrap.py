@@ -14,3 +14,10 @@ with tarfile.open(fileobj=io.BytesIO(payload), mode="r:gz") as archive:
         if destination != root and root not in destination.parents:
             raise RuntimeError(f"Unsafe archive path: {member.name}")
     archive.extractall(".", filter="data")
+
+# The workflow token intentionally lacks permission to create workflow files.
+# CI was already executed in this bootstrap job; the final CI workflow is added
+# by the authenticated GitHub connector after the source tree is materialized.
+generated_ci = root / ".github" / "workflows" / "test.yml"
+if generated_ci.exists():
+    generated_ci.unlink()
