@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}داشبورد معلم{% endblock %}
+{% block content %}
+<section class="hero"><h1>داشبورد معلم</h1><p>فقط کلاس‌ها و درس‌هایی که مدیر به شما تخصیص داده است قابل ثبت نمره هستند.</p></section>
+<div class="grid">
+  <div class="card stat"><span class="muted">کلاس/درس‌های من</span><b>{{ assignments|length }}</b></div>
+  <div class="card stat"><span class="muted">اعتراض در انتظار</span><b>{{ pending }}</b></div>
+  <div class="card">
+    <h2>کلاس‌های تخصیص‌یافته</h2>
+    {% if assignments %}<div class="table-wrap"><table><thead><tr><th>پایه</th><th>کلاس</th><th>درس</th><th>عملیات</th></tr></thead><tbody>{% for a in assignments %}<tr><td>{{ a.school_class.grade_level.name }}</td><td>{{ a.school_class.name }}</td><td>{{ a.subject.name }}</td><td><a class="btn btn-primary" href="{{ url_for('grades', assignment_id=a.id) }}">ثبت نمرات</a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty">هنوز کلاسی به شما تخصیص داده نشده است.</div>{% endif %}
+  </div>
+  <div class="card"><h2>آخرین اطلاعیه‌ها</h2>{% for n in announcements %}<div class="notice"><b>{{ n.title }}</b><p>{{ n.body }}</p></div>{% else %}<div class="empty">اطلاعیه‌ای ندارید.</div>{% endfor %}</div>
+</div>
+{% endblock %}
