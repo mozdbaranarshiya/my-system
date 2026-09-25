@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}ورود | سامانه آموزش و پرورش استان اصفهان{% endblock %}
+{% block content %}
+<div class="row justify-content-center py-5"><div class="col-md-5 col-lg-4">
+  <div class="card shadow-sm border-0"><div class="card-body p-4">
+    <h1 class="h4 mb-4 text-center">ورود به سامانه</h1>
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="mb-3"><label class="form-label">نام کاربری</label><input name="username" class="form-control" required autofocus></div>
+      <div class="mb-3"><label class="form-label">رمز عبور</label><input type="password" name="password" class="form-control" required></div>
+      <button class="btn btn-primary w-100">ورود</button>
+    </form>
+    <div class="text-secondary small mt-3">نام کاربری و رمز اولیه هر کاربر، کد ملی اوست. تغییر رمز فقط توسط مدیر انجام می‌شود.</div>
+  </div></div>
+</div></div>
+{% endblock %}
