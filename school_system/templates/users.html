@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="h3 mb-4">مدیریت کاربران</h1>
+<div class="card border-0 shadow-sm mb-4"><div class="card-body"><h2 class="h5">افزودن کاربر</h2>
+<form method="post" action="{{ url_for('main.admin_user_create') }}" class="row g-2">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="col-md-3"><input name="full_name" class="form-control" placeholder="نام و نام خانوادگی" required></div>
+<div class="col-md-3"><input name="national_id" class="form-control" inputmode="numeric" pattern="\d{10}" maxlength="10" placeholder="کد ملی ۱۰ رقمی" required></div>
+<div class="col-md-2"><select name="role" class="form-select" required><option value="teacher">معلم</option><option value="student">دانش‌آموز</option></select></div>
+<div class="col-md-3"><select name="classroom_id" class="form-select"><option value="">کلاس (برای دانش‌آموز)</option>{% for c in classrooms %}<option value="{{ c.id }}">{{ c.grade_level.name }} - {{ c.name }}</option>{% endfor %}</select></div>
+<div class="col-md-1"><button class="btn btn-primary w-100">ثبت</button></div>
+</form></div></div>
+<div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>نام</th><th>نقش</th><th>کد ملی</th><th>کلاس</th><th>وضعیت</th><th>عملیات</th></tr></thead><tbody>
+{% for u in users %}<tr><td>{{ u.full_name }}</td><td>{{ {'admin':'مدیر','teacher':'معلم','student':'دانش‌آموز'}[u.role] }}</td><td>{{ u.national_id }}</td><td>{{ u.student_profile.classroom.name if u.student_profile else '-' }}</td><td>{{ 'فعال' if u.is_active else 'غیرفعال' }}</td><td>
+<button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#edit{{u.id}}">ویرایش</button>
+<button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#cred{{u.id}}">ورود</button>
+{% if u.role != 'admin' %}<form class="d-inline" method="post" action="{{ url_for('main.admin_user_delete', user_id=u.id) }}" onsubmit="return confirm('حذف شود؟')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-danger">حذف</button></form>{% endif %}
+</td></tr>
+<div class="modal fade" id="edit{{u.id}}"><div class="modal-dialog"><div class="modal-content"><form method="post" action="{{ url_for('main.admin_user_edit', user_id=u.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="modal-header"><h5 class="modal-title">ویرایش {{u.full_name}}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><label class="form-label">نام</label><input name="full_name" value="{{u.full_name}}" class="form-control mb-3" required>{% if u.role=='student' %}<label class="form-label">کلاس</label><select name="classroom_id" class="form-select mb-3">{% for c in classrooms %}<option value="{{c.id}}" {% if u.student_profile and u.student_profile.classroom_id==c.id %}selected{% endif %}>{{c.grade_level.name}} - {{c.name}}</option>{% endfor %}</select>{% endif %}<div class="form-check"><input class="form-check-input" type="checkbox" name="is_active" {% if u.is_active %}checked{% endif %}><label class="form-check-label">فعال</label></div></div><div class="modal-footer"><button class="btn btn-primary">ذخیره</button></div></form></div></div></div>
+<div class="modal fade" id="cred{{u.id}}"><div class="modal-dialog"><div class="modal-content"><form method="post" action="{{ url_for('main.admin_user_credentials', user_id=u.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="modal-header"><h5 class="modal-title">اطلاعات ورود {{u.full_name}}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><label class="form-label">نام کاربری</label><input name="username" value="{{u.username}}" class="form-control mb-3" required><label class="form-label">رمز جدید</label><input name="password" type="password" minlength="6" class="form-control" required></div><div class="modal-footer"><button class="btn btn-primary">تغییر</button></form><form method="post" action="{{ url_for('main.admin_user_reset', user_id=u.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-secondary">بازنشانی به کد ملی</button></form></div></div></div></div>
+{% endfor %}</tbody></table></div></div>
+{% endblock %}

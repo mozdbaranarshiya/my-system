@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4"><div><h1 class="h3 mb-1">داشبورد</h1><div class="text-secondary">خوش آمدید، {{ current_user.full_name }}</div></div><span class="badge text-bg-primary fs-6">{{ {'admin':'مدیر','teacher':'معلم','student':'دانش‌آموز'}[current_user.role] }}</span></div>
+<div class="row g-3">
+{% if current_user.role == 'admin' %}
+  <div class="col-md-3"><div class="stat-card"><div class="stat-number">{{ data.teachers }}</div><div>معلم</div></div></div>
+  <div class="col-md-3"><div class="stat-card"><div class="stat-number">{{ data.students }}</div><div>دانش‌آموز</div></div></div>
+  <div class="col-md-3"><div class="stat-card"><div class="stat-number">{{ data.classes }}</div><div>کلاس</div></div></div>
+  <div class="col-md-3"><div class="stat-card"><div class="stat-number">{{ data.pending_objections }}</div><div>اعتراض در انتظار</div></div></div>
+{% elif current_user.role == 'teacher' %}
+  <div class="col-md-6"><div class="stat-card"><div class="stat-number">{{ data.assignments }}</div><div>کلاس/درس تخصیص‌یافته</div></div></div>
+  <div class="col-md-6"><div class="stat-card"><div class="stat-number">{{ data.announcements }}</div><div>اطلاعیه قابل مشاهده</div></div></div>
+{% else %}
+  <div class="col-md-6"><a class="card-link" href="{{ url_for('main.student_report') }}"><div class="stat-card"><div class="stat-number">کارنامه</div><div>مشاهده نمرات</div></div></a></div>
+  <div class="col-md-6"><a class="card-link" href="{{ url_for('main.announcements') }}"><div class="stat-card"><div class="stat-number">{{ data.announcements }}</div><div>اطلاعیه قابل مشاهده</div></div></a></div>
+{% endif %}
+</div>
+{% endblock %}
