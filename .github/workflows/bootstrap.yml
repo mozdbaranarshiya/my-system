@@ -22,7 +22,7 @@ jobs:
       - name: Compile Python
         run: python -m compileall -q .
       - name: Run tests
-        run: pytest -q
+        run: PYTHONPATH=. pytest -q
       - name: Commit generated project
         run: |
           git config user.name "github-actions[bot]"
