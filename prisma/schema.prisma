@@ -1,0 +1,179 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                       Int                 @id @default(autoincrement())
+  national_id              String              @unique(map: "ix_users_national_id") @db.VarChar(10)
+  username                 String              @unique(map: "ix_users_username") @db.VarChar(80)
+  password_hash            String              @db.VarChar(255)
+  full_name                String              @db.VarChar(150)
+  role                     String              @db.VarChar(20)
+  is_active_flag           Boolean             @default(true)
+  created_at               DateTime            @default(now()) @db.Timestamptz(6)
+  student_profile          StudentProfile?
+  teacher_assignments      TeacherAssignment[] @relation("teacher_assignments")
+  scores_as_student        Score[]             @relation("score_student")
+  scores_updated           Score[]             @relation("score_updated_by")
+  grade_locks              GradeLock[]         @relation("grade_lock_user")
+  announcements_targeted   Announcement[]      @relation("announcement_target")
+  announcements_created    Announcement[]      @relation("announcement_creator")
+  objections_as_student    Objection[]         @relation("objection_student")
+  objections_resolved      Objection[]         @relation("objection_resolver")
+  represented_classrooms   Classroom[]         @relation("class_representative")
+
+  @@index([role], map: "ix_users_role")
+  @@map("users")
+}
+
+model GradeLevel {
+  id          Int         @id @default(autoincrement())
+  name        String      @unique @db.VarChar(80)
+  sort_order  Int         @default(0)
+  classrooms Classroom[]
+  subjects    Subject[]
+
+  @@map("grade_levels")
+}
+
+model Classroom {
+  id                        Int                 @id @default(autoincrement())
+  name                      String              @db.VarChar(80)
+  grade_level_id            Int
+  representative_student_id Int?
+  grade_level               GradeLevel          @relation(fields: [grade_level_id], references: [id], onDelete: Restrict)
+  representative            User?               @relation("class_representative", fields: [representative_student_id], references: [id], onDelete: SetNull)
+  students                  StudentProfile[]
+  teacher_assignments       TeacherAssignment[]
+  scores                    Score[]
+  grade_locks               GradeLock[]
+  announcements             Announcement[]
+
+  @@unique([grade_level_id, name], map: "uq_class_grade_name")
+  @@index([grade_level_id], map: "ix_classrooms_grade_level_id")
+  @@map("classrooms")
+}
+
+model StudentProfile {
+  id           Int       @id @default(autoincrement())
+  user_id      Int       @unique
+  classroom_id Int
+  user         User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  classroom    Classroom @relation(fields: [classroom_id], references: [id], onDelete: Restrict)
+
+  @@index([classroom_id], map: "ix_student_profiles_classroom_id")
+  @@map("student_profiles")
+}
+
+model Subject {
+  id                  Int                 @id @default(autoincrement())
+  name                String              @db.VarChar(120)
+  grade_level_id      Int
+  grade_level         GradeLevel          @relation(fields: [grade_level_id], references: [id], onDelete: Restrict)
+  teacher_assignments TeacherAssignment[]
+  scores              Score[]
+  grade_locks         GradeLock[]
+
+  @@unique([grade_level_id, name], map: "uq_subject_grade_name")
+  @@index([grade_level_id], map: "ix_subjects_grade_level_id")
+  @@map("subjects")
+}
+
+model TeacherAssignment {
+  id           Int       @id @default(autoincrement())
+  teacher_id   Int
+  classroom_id Int
+  subject_id   Int
+  teacher      User      @relation("teacher_assignments", fields: [teacher_id], references: [id], onDelete: Cascade)
+  classroom    Classroom @relation(fields: [classroom_id], references: [id], onDelete: Cascade)
+  subject      Subject   @relation(fields: [subject_id], references: [id], onDelete: Cascade)
+
+  @@unique([teacher_id, classroom_id, subject_id], map: "uq_teacher_class_subject")
+  @@index([teacher_id], map: "ix_teacher_assignments_teacher_id")
+  @@index([classroom_id], map: "ix_teacher_assignments_classroom_id")
+  @@index([subject_id], map: "ix_teacher_assignments_subject_id")
+  @@map("teacher_assignments")
+}
+
+model Score {
+  id            Int       @id @default(autoincrement())
+  student_id    Int
+  classroom_id  Int
+  subject_id    Int
+  formative     Decimal?  @db.Decimal(4, 2)
+  final         Decimal?  @db.Decimal(4, 2)
+  updated_by_id Int?
+  updated_at    DateTime  @default(now()) @db.Timestamptz(6)
+  student       User      @relation("score_student", fields: [student_id], references: [id], onDelete: Cascade)
+  classroom     Classroom @relation(fields: [classroom_id], references: [id], onDelete: Cascade)
+  subject       Subject   @relation(fields: [subject_id], references: [id], onDelete: Cascade)
+  updated_by    User?     @relation("score_updated_by", fields: [updated_by_id], references: [id], onDelete: SetNull)
+  objections    Objection[]
+
+  @@unique([student_id, classroom_id, subject_id], map: "uq_score_student_class_subject")
+  @@index([student_id], map: "ix_scores_student_id")
+  @@index([classroom_id], map: "ix_scores_classroom_id")
+  @@index([subject_id], map: "ix_scores_subject_id")
+  @@map("scores")
+}
+
+model GradeLock {
+  id            Int       @id @default(autoincrement())
+  classroom_id  Int
+  subject_id    Int
+  component     String    @db.VarChar(20)
+  locked_by_id  Int?
+  locked_at     DateTime  @default(now()) @db.Timestamptz(6)
+  classroom     Classroom @relation(fields: [classroom_id], references: [id], onDelete: Cascade)
+  subject       Subject   @relation(fields: [subject_id], references: [id], onDelete: Cascade)
+  locked_by     User?     @relation("grade_lock_user", fields: [locked_by_id], references: [id], onDelete: SetNull)
+
+  @@unique([classroom_id, subject_id, component], map: "uq_grade_lock")
+  @@index([classroom_id], map: "ix_grade_locks_classroom_id")
+  @@index([subject_id], map: "ix_grade_locks_subject_id")
+  @@map("grade_locks")
+}
+
+model Announcement {
+  id                  Int        @id @default(autoincrement())
+  title               String     @db.VarChar(180)
+  body                String     @db.Text
+  target_type         String     @db.VarChar(20)
+  target_classroom_id Int?
+  target_user_id      Int?
+  created_by_id       Int?
+  created_at          DateTime   @default(now()) @db.Timestamptz(6)
+  target_classroom    Classroom? @relation(fields: [target_classroom_id], references: [id], onDelete: Cascade)
+  target_user         User?      @relation("announcement_target", fields: [target_user_id], references: [id], onDelete: Cascade)
+  created_by          User?      @relation("announcement_creator", fields: [created_by_id], references: [id], onDelete: SetNull)
+
+  @@map("announcements")
+}
+
+model Objection {
+  id              Int       @id @default(autoincrement())
+  student_id      Int
+  score_id        Int
+  component       String    @db.VarChar(20)
+  reason          String    @db.Text
+  status          String    @default("pending") @db.VarChar(20)
+  response        String?   @db.Text
+  previous_score  Decimal?  @db.Decimal(4, 2)
+  changed_score   Decimal?  @db.Decimal(4, 2)
+  resolved_by_id  Int?
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  resolved_at     DateTime? @db.Timestamptz(6)
+  student         User      @relation("objection_student", fields: [student_id], references: [id], onDelete: Cascade)
+  score           Score     @relation(fields: [score_id], references: [id], onDelete: Cascade)
+  resolved_by     User?     @relation("objection_resolver", fields: [resolved_by_id], references: [id], onDelete: SetNull)
+
+  @@index([student_id], map: "ix_objections_student_id")
+  @@index([score_id], map: "ix_objections_score_id")
+  @@index([status], map: "ix_objections_status")
+  @@map("objections")
+}
