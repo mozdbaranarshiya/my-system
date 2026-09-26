@@ -1,0 +1,41 @@
+{
+  "name": "my-system",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "prisma generate && tsc -p tsconfig.json",
+    "start": "node dist/src/server.js",
+    "test": "vitest run",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "connect-pg-simple": "10.0.0",
+    "dotenv": "17.4.2",
+    "express": "5.2.1",
+    "express-session": "1.19.0",
+    "nunjucks": "3.2.4",
+    "pg": "8.23.0"
+  },
+  "devDependencies": {
+    "@types/connect-pg-simple": "7.0.3",
+    "@types/express": "^5.0.0",
+    "@types/express-session": "^1.18.0",
+    "@types/node": "^24.0.0",
+    "@types/nunjucks": "^3.2.0",
+    "@types/pg": "^8.15.0",
+    "prisma": "7.10.0",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vitest": "5.0.2"
+  }
+}
