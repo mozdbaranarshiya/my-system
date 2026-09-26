@@ -39,11 +39,9 @@
   </div>
 </nav>
 <main class="container py-4">
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-    {% endfor %}
-  {% endwith %}
+  {% for item in flashes %}
+    <div class="alert alert-{{ item.category }} alert-dismissible fade show" role="alert">{{ item.message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+  {% endfor %}
   {% block content %}{% endblock %}
 </main>
 <footer class="container pb-4 text-center text-secondary small">سامانه آموزش و پرورش استان اصفهان</footer>
